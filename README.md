@@ -1,0 +1,1 @@
+# rust-singleton-design-pattern
