@@ -1,71 +1,125 @@
 mod book;
 mod library;
 
-use library::Library;
+use library::LIBRARY;
+use std::io::{self, Write};
 
 fn main() {
-    let mut my_library = Library::new();
-
-    if let Some(added_book) = my_library.add_book(
-        "Atomic Habits Perubahan Kecil yang Memberikan Hasil Luar Biasa",
-        "James Clear",
-    ) {
-        println!("buku berhasil ditambahkan: {:?}", added_book);
-    } else {
-        println!("buku gagal ditambahkan, buku dengan judul yang sama sudah ada");
+    loop {
+        print_option();
+        print!("pilih opsi: ");
+        io::stdout().flush().unwrap();
+        let mut input = String::new();
+        io::stdin().read_line(&mut input).unwrap();
+        let input = input.trim();
+        match input {
+            "1" => add_book(),
+            "2" => find_book_by_title(),
+            "3" => find_all_books(),
+            "4" => edit_book(),
+            "5" => remove_book(),
+            "6" => break,
+            _ => println!("input tidak valid"),
+        }
     }
+}
 
-    if let Some(added_book) =
-        my_library.add_book("How to Win Friends and Influence People", "Dale Carnegie")
-    {
-        println!("buku berhasil ditambahkan: {:?}", added_book);
-    } else {
-        println!("buku gagal ditambahkan, buku dengan judul yang sama sudah ada");
+fn print_option() {
+    println!("1. tambah buku");
+    println!("2. cari buku berdasarkan judul");
+    println!("3. cari semua buku");
+    println!("4. ubah buku berdasarkan judul");
+    println!("5. hapus buku berdasarkan judul");
+    println!("6. keluar");
+    println!();
+}
+
+fn add_book() {
+    print!("judul: ");
+    io::stdout().flush().unwrap();
+    let mut title = String::new();
+    io::stdin().read_line(&mut title).unwrap();
+    let title = title.trim();
+
+    print!("penulis: ");
+    io::stdout().flush().unwrap();
+    let mut author = String::new();
+    io::stdin().read_line(&mut author).unwrap();
+    let author = author.trim();
+
+    match LIBRARY.lock().unwrap().add_book(title, author) {
+        Ok(_) => println!("buku berhasil ditambahkan"),
+        Err(e) => println!("{}", e),
     }
+    println!();
+}
 
-    if let Some(added_book) =
-        my_library.add_book("Berani Tidak Disukai", "Ichiro Kishimi, Fumitake Koga")
-    {
-        println!("buku berhasil ditambahkan: {:?}", added_book);
-    } else {
-        println!("buku gagal ditambahkan, buku dengan judul yang sama sudah ada");
+fn find_book_by_title() {
+    print!("judul: ");
+    io::stdout().flush().unwrap();
+    let mut title = String::new();
+    io::stdin().read_line(&mut title).unwrap();
+    let title = title.trim();
+
+    match LIBRARY.lock().unwrap().find_book_by_title(title) {
+        Ok(book) => println!("judul: {}, penulis: {}", book.title, book.author),
+        Err(e) => println!("{}", e),
     }
+    println!();
+}
 
-    if let Some(edited_book) = my_library.edit_book(
-        "How to Win Friends and Influence People",
-        "Nunchi Seni Membaca Pikiran dan Perasaan Orang Lain",
-        "Euny Hong",
-    ) {
-        println!("buku berhasil diubah: {:?}", edited_book);
-    } else {
-        println!("buku tidak ditemukan untuk diubah");
-    }
-
-    if let Some(removed_book) = my_library.remove_book("Berani Tidak Disukai") {
-        println!("buku berhasil dihapus: {:?}", removed_book);
-    } else {
-        println!("buku tidak ditemukan untuk dihapus");
-    }
-
-    if let Some(all_books) = my_library.get_books() {
-        if all_books.is_empty() {
-            println!("buku kosong");
-        } else {
-            println!("list buku: ");
-            for book in all_books {
-                println!("- {:?}", book);
+fn find_all_books() {
+    match LIBRARY.lock().unwrap().find_all_books() {
+        Ok(books) => {
+            for book in books {
+                println!("judul: {}, penulis: {}", book.title, book.author);
             }
         }
-    } else {
-        println!("buku kosong");
+        Err(e) => println!("{}", e),
     }
+    println!();
+}
 
-    if let Some(book) =
-        my_library.get_book_by_title("Nunchi Seni Membaca Pikiran dan Perasaan Orang Lain")
+fn edit_book() {
+    print!("judul: ");
+    io::stdout().flush().unwrap();
+    let mut title = String::new();
+    io::stdin().read_line(&mut title).unwrap();
+    let title = title.trim();
+
+    print!("judul baru: ");
+    io::stdout().flush().unwrap();
+    let mut new_title = String::new();
+    io::stdin().read_line(&mut new_title).unwrap();
+    let new_title = new_title.trim();
+
+    print!("penulis baru: ");
+    io::stdout().flush().unwrap();
+    let mut new_author = String::new();
+    io::stdin().read_line(&mut new_author).unwrap();
+    let new_author = new_author.trim();
+
+    match LIBRARY
+        .lock()
+        .unwrap()
+        .edit_book(title, new_title, new_author)
     {
-        println!("buku berdasarkan nama judul {}: ", book.title);
-        println!("- {:?}", book);
-    } else {
-        println!("buku tidak ditemukan");
+        Ok(_) => println!("buku berhasil diubah"),
+        Err(e) => println!("{}", e),
     }
+    println!();
+}
+
+fn remove_book() {
+    print!("buku: ");
+    io::stdout().flush().unwrap();
+    let mut title = String::new();
+    io::stdin().read_line(&mut title).unwrap();
+    let title = title.trim();
+
+    match LIBRARY.lock().unwrap().remove_book(title) {
+        Ok(_) => println!("buku berhasil dihapus"),
+        Err(e) => println!("{}", e),
+    }
+    println!();
 }
